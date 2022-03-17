@@ -15,6 +15,7 @@ char p[GAMEBLOCKS];
 char tryIndex = 0;
 char tryOrder[GAMEBLOCKS];
 std::list<BackPoint> backList;
+int ap[25] = {23, 24,20, 3, 4, 0, 1, 2, 21, 9, 5, 6, 7, 8, 14, 10, 11, 12, 13, 19, 15, 16, 17, 18, 22};
 void initTryOrder()
 {
     for(int i=0;i<GAMEBLOCKS;i++)
@@ -22,6 +23,8 @@ void initTryOrder()
         tryOrder[i] = -1;
         p[i] = -1;
     }
+    backList.clear();
+    tryIndex = 0;
 }
 void ascMatrix()
 {
@@ -191,8 +194,7 @@ int findNeigborBlocks(char room,char dir)//查找所有合适的邻居块，如�
             {
                 if (matrix[room*4+3] == matrix[i*4])
                 {
-                    printf("\n\rhas down neighbor\n\r");
-                     if (isNeigborFit(row+1,col,i))
+                    if (isNeigborFit(row+1,col,i))
                     {
                         addTry(row+1,col,dir,i,&found); 
                     }
@@ -256,23 +258,54 @@ char getEmptyNeigborRoom(char *empty) //返回合适的块号，对比的方位�
     }
     return -1;  //this will gota never happen.
 }
-int getNeighBorRoom(char room, char dir)
+int getNeighBorRoom(char room, char dir) //根据序号和方向找到邻居序号
 {
-    char row, col,index;
+    char row, col;
     row = room /GAMESCALE;
     col = room %GAMESCALE;
     if (dir ==0)
-        return index - GAMESCALE;
+        return room - GAMESCALE;
     if (dir == 1)
-        return index -1;
+        return room -1;
     if (dir ==2)
-        return index +1;
+        return room +1;
     if (dir ==3)
-        return index + GAMESCALE;
+        return room + GAMESCALE;
     return -1;
 }
 bool isTry=true;
 int main()
+{
+    ascMatrix();
+    for(int i=0;i<GAMEBLOCKS;i++)
+    {
+        p[i] = ap[i];
+    }
+
+    for(char i =0;i< GAMEBLOCKS;i++)
+    {
+        
+        for(int dir=0;dir<=4;dir++)
+        {
+            char tindex;
+            initTryOrder();
+            int count = findNeigborBlocks(i,dir);
+            printf("%d{%c,%c,%c,%c}->%d: found %d neighbors[",i,matrix[i*4],matrix[i*4+1],matrix[i*4+2],matrix[i*4+3],dir,count);
+            if (tryOrder[1] !=-1)
+            {
+                tindex = tryOrder[1];
+                printf("({%c,%c,%c,%c})",matrix[tindex*4],matrix[tindex*4+1],matrix[tindex*4+2],matrix[tindex*4+3]);
+            }
+            while(!backList.empty())
+            {
+                tindex =backList.back().neighbor;
+                printf("{%c,%c,%c,%c}",matrix[tindex*4],matrix[tindex*4+1],matrix[tindex*4+2],matrix[tindex*4+3]);
+                backList.pop_back();
+            }
+        }
+    }
+}
+void main1()
 {
     ascMatrix();
     printMatrix();
@@ -303,9 +336,9 @@ int main()
                     else
                     {
                         BackPoint last = backList.back();//获取最后一个后备位置
-                        while (tryOrder[tryIndex] != last.neighbor)
+                        while (tryOrder[tryIndex] != last.neighbor && (tryIndex >0))
                         {
-                            for(int i=0;i<GAMEBLOCKS;i++)
+                            for(int i=0;i<GAMEBLOCKS;i++)//从排列表中抹去回退位
                             {
                                 if (p[i] == tryOrder[tryIndex])
                                 {
